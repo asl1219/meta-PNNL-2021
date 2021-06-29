@@ -62,8 +62,7 @@ babynames
 
 babynames %>% group_by(year, sex) %>% summarise(prop = max(prop), name = name[which.max(prop)])
 
-babynames %>% group_by(year) %>% summarize(sum(n))
-
+babynames %>% group_by(year) %>% summarize(uNames = length(unique(name)))
 #my version
 babynames %>% group_by(year) %>% filter(name == "Adam") %>% summarize(num = sum(n)) %>% ggplot(aes(year, num)) + geom_line() + guides()
 
