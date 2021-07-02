@@ -27,3 +27,6 @@ gapminder %>%
   pivot_longer(lifeExp:gdpPercap, names_to = "variable") %>% ggplot(aes(year,value, group = country, color = continent)) + 
   geom_line() +
   facet_wrap(~variable, scales = "free")
+
+#home work
+
