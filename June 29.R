@@ -1,6 +1,7 @@
 #requiredlibraries
 library(tidyr)
 library(dplyr)
+library(ggplot2)
 
 #read in files and rename
 fluxes = readr::read_csv("fluxes.csv")
@@ -23,4 +24,8 @@ collarInfo =
 
 #print dataset summary by treatment
 collarInfo %>% group_by(Treatment) %>% summarize(mean(value), sd(value), n()) 
+
+#boxplot by treatment with dots
+collarInfo %>% ggplot(aes(value, Treatment)) + geom_boxplot() + geom_jitter(height = 0)#15 boxplots seems like a lot
+
 
