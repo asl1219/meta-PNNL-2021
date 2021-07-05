@@ -40,4 +40,4 @@ StDevByBoth = collarInfo %>% group_by(date, Treatment) %>% summarize(stDevds = s
 meansByBoth %>% ggplot(aes(date, means, group = Treatment, color = Treatment)) + geom_line()
 
 #print the information on collars not included (later to be included in report)
-print(collarsNotIncluded)
+print(collarInfo)
