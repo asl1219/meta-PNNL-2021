@@ -37,7 +37,8 @@ collarInfo %>% ggplot(aes(value, Treatment)) + geom_boxplot() + geom_jitter(heig
 meansByBoth = collarInfo %>% group_by(date, Treatment) %>% summarize(means = mean(value))
 StDevByBoth = collarInfo %>% group_by(date, Treatment) %>% summarize(stDevds = sd(value))
 
-meansByBoth %>% ggplot(aes(date, means, group = Treatment, color = Treatment)) + geom_line()
+lineMeanBothGraph = meansByBoth %>% ggplot(aes(date, means, group = Treatment, color = Treatment)) + geom_line() + ggtitle("Mean Flux by Date and Treatment") + xlab("Date") + ylab("Mean Flux")
+lineMeanBothGraph
 
 #print the information on collars not included (later to be included in report)
 print(collarInfo)

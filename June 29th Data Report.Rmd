@@ -5,26 +5,42 @@ date: "7/4/2021"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r, echo=FALSE, message=FALSE,  include=FALSE}
+#necessary libraries and data
+library(dplyr)
+library(tidyr)
+fluxes = readr::read_csv("fluxes.csv")
+collar_map = readr::read_csv("collar_map.csv")
 ```
 
-## R Markdown
+# **Influence of Biotic Interactions on Resiliance to Storm Conditions**
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+### **Dataset Overview**   
+The data set is a set of ofas set of data.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+### **Relevant Points**
+```{R, echo = FALSE}
+#shape into a single dataset with relevant columns
+fluxesTidy = 
+  (fluxes %>% 
+    gather(date, value, 2:7))
+collarMapTidy = 
+  collar_map %>% select(-LI8100A_Port, -Group, -Plot)
+collarInfoNoFilter = #no filter needed here
+  collarMapTidy %>% left_join(fluxesTidy, "Collar")
 ```
 
-## Including Plots
+Number of Observations = **`summarize(collarInfoNoFilter`**
 
-You can also embed plots, for example:
+Minimum Flux = **`r sort(collarInfoNoFilter[3], decreasing = FALSE)[1]`**
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+Maximum Flux =  
+
+First Date = 
+
+Final Date = 
+
+### **Ending Session Info**
+```{r, echo = FALSE}
+sessionInfo()
 ```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
