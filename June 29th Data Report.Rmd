@@ -1,7 +1,7 @@
 ---
 title: "Report for June 29th Data"
 author: "Adam Levin"
-date: "7/4/2021"
+
 output: html_document
 ---
 
@@ -16,7 +16,7 @@ collar_map = readr::read_csv("collar_map.csv")
 # **Influence of Biotic Interactions on Resiliance to Storm Conditions**
 
 ### **Dataset Overview**   
-The data set is a set of ofas set of data.
+The data set corresponds to the experiement outlined in _"Do biotic interactions control coastal forest resilience to extreme storm events?"_
 
 ### **Relevant Points**
 ```{R, echo = FALSE}
@@ -26,19 +26,26 @@ fluxesTidy =
     gather(date, value, 2:7))
 collarMapTidy = 
   collar_map %>% select(-LI8100A_Port, -Group, -Plot)
-collarInfoNoFilter = #no filter needed here
+#pre filter data to find total observations
+collarInfoPreFilter =
   collarMapTidy %>% left_join(fluxesTidy, "Collar")
+#general collarInfo
+collarInfo = collarInfoPreFilter %>%
+  filter(!is.na(value))
+  
+sortedByDate = collarInfo$date %>% sort(decreasing = FALSE) #sort collar info sorted by date 
+
 ```
 
-Number of Observations = **`summarize(collarInfoNoFilter`**
+Number of Observations = **`r collarInfoPreFilter %>% dplyr::summarize(n()) `**
 
-Minimum Flux = **`r sort(collarInfoNoFilter[3], decreasing = FALSE)[1]`**
+Minimum Flux = **`r collarInfo[4] %>% min()`**
 
-Maximum Flux =  
+Maximum Flux = **`r collarInfo[4] %>% max()`**
 
-First Date = 
+First Date = **`r sortedByDate[1]`**
 
-Final Date = 
+Final Date = **`r sortedByDate %>% last()`**
 
 ### **Ending Session Info**
 ```{r, echo = FALSE}
