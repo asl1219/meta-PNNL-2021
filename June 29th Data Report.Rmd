@@ -9,43 +9,78 @@ output: html_document
 #necessary libraries and data
 library(dplyr)
 library(tidyr)
+library(ggplot2)
 fluxes = readr::read_csv("fluxes.csv")
 collar_map = readr::read_csv("collar_map.csv")
+
 ```
 
 # **Influence of Biotic Interactions on Resiliance to Storm Conditions**
 
 ### **Dataset Overview**   
-The data set corresponds to the experiement outlined in _"Do biotic interactions control coastal forest resilience to extreme storm events?"_
+The data set corresponds to the experiement outlined     in _"Do biotic interactions control coastal forest resilience to extreme storm events?"_
 
 ### **Relevant Points**
 ```{R, echo = FALSE}
-#shape into a single dataset with relevant columns
+#cean up both datasets
 fluxesTidy = 
   (fluxes %>% 
     gather(date, value, 2:7))
 collarMapTidy = 
   collar_map %>% select(-LI8100A_Port, -Group, -Plot)
-#pre filter data to find total observations
+#merge the datasets pre filter data to find total observations
 collarInfoPreFilter =
   collarMapTidy %>% left_join(fluxesTidy, "Collar")
 #general collarInfo
 collarInfo = collarInfoPreFilter %>%
   filter(!is.na(value))
-  
-sortedByDate = collarInfo$date %>% sort(decreasing = FALSE) #sort collar info sorted by date 
+
 
 ```
 
-Number of Observations = **`r collarInfoPreFilter %>% dplyr::summarize(n()) `**
+Number of Observations = **`r collarInfoPreFilter %>% summarize(n()) `**
 
-Minimum Flux = **`r collarInfo[4] %>% min()`**
+Minimum Flux = **`r collarInfo$value %>% min()`**
 
-Maximum Flux = **`r collarInfo[4] %>% max()`**
+Maximum Flux = **`r collarInfo$value %>% max()`**
+
+```{r, echo = FALSE}
+#set up for date info (final and first)
+sortedByDate = collarInfo$date %>% sort(decreasing = FALSE) #sort collar info sorted by date 
+```
 
 First Date = **`r sortedByDate[1]`**
 
 Final Date = **`r sortedByDate %>% last()`**
+
+### **Dataset Summary by Treatment**
+```{r, echo = FALSE}
+infoByTreatment = collarInfo %>% group_by(Treatment) %>% summarize(mean(value), sd(value), n()) 
+print(infoByTreatment)
+```
+
+
+```{r, echo = FALSE}
+#boxplot graph
+boxplotGraph = collarInfo %>% ggplot(aes(value, Treatment)) + geom_boxplot() + geom_jitter(height = 0)
+
+#setup for means and stdev by treatment and date
+meansByBoth = collarInfo %>% group_by(date, Treatment) %>% summarize(means = mean(value))
+StDevByBoth = collarInfo %>% group_by(date, Treatment) %>% summarize(stDevds = sd(value))
+
+#setup for graphs
+boxplotGraph = collarInfo %>% ggplot(aes(value, Treatment)) + geom_boxplot() + geom_jitter(height = 0) + ggtitle("Boxplots of Flux by Treatment")
+
+lineMeanBothGraph = meansByBoth %>% ggplot(aes(date, means, group = Treatment, color = Treatment)) + geom_line() + ggtitle("Mean Flux by Date and Treatment") + xlab("Date") + ylab("Mean Flux")
+```
+
+### **Relevant Graphs**
+`r boxplotGraph `
+
+`r lineMeanBothGraph`
+
+### **Information on Collars not Included**
+`r collarsNotIncluded = collarInfoPreFilter %>% filter(is.na(value)) %>% select(-value)`
 
 ### **Ending Session Info**
 ```{r, echo = FALSE}

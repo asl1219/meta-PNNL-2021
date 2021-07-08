@@ -30,7 +30,9 @@ collarInfo %>% group_by(Treatment) %>% summarize(mean(value), sd(value), n())
 print(collarInfo)
 
 #boxplot by treatment with dots
-collarInfo %>% ggplot(aes(value, Treatment)) + geom_boxplot() + geom_jitter(height = 0)#15 boxplots seems like a lot
+boxplotGraph = collarInfo %>% ggplot(aes(value, Treatment)) + geom_boxplot() + geom_jitter(height = 0) + ggtitle("Boxplots of Flux by Treatment")
+
+
 
 #line graph of mean fluxes by treatment and date by error bars
 #mean and s.d. by date/treatment (similar to printing info by treatment)
@@ -38,7 +40,8 @@ meansByBoth = collarInfo %>% group_by(date, Treatment) %>% summarize(means = mea
 StDevByBoth = collarInfo %>% group_by(date, Treatment) %>% summarize(stDevds = sd(value))
 
 lineMeanBothGraph = meansByBoth %>% ggplot(aes(date, means, group = Treatment, color = Treatment)) + geom_line() + ggtitle("Mean Flux by Date and Treatment") + xlab("Date") + ylab("Mean Flux")
-meansByBoth %>% ggplot(aes(date, means, group = Treatment, color = Treatment)) + geom_line()
 
 #print the information on collars not included (later to be included in report)
-print(collarInfo)
+print(collarsNotIncluded)
+
+#save graphs
