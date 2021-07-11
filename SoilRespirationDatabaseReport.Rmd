@@ -1,0 +1,38 @@
+---
+title: "Soil Respiration Database Report"
+author: "Adam Levin"
+date: "7/11/2021"
+output: html_document
+---
+
+Libraries used and source of data read in:
+```{r, message=FALSE, warning=FALSE}
+#Libraries
+library(tidyr)
+library(dplyr)
+
+#Data source
+srdbData = read.csv("srdb-master/srdb-data.csv")
+
+```
+
+
+** Number of Entries by Ecosystem Type: **
+```{r, echo = FALSE}
+#choose relevant categories
+srdbManagable = srdbData %>% select(Latitude, Longitude, Study_midyear, Ecosystem_type, Manipulation, Rs_annual, RC_annual)
+
+#number of observations (rows) by ecosystem type
+#get rid of whitespace first
+srdbManagable$Ecosystem_type = srdbManagable$Ecosystem_type %>% trimws(c("both"))
+
+numberByEcoType = srdbManagable %>% group_by(Ecosystem_type) %>% summarize(n())
+
+numberByEcoType
+```
+
+  
+**Session Information**
+```{r, echo = FALSE}
+sessionInfo()
+```
