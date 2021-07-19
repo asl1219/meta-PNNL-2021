@@ -10,6 +10,7 @@ Libraries used and source of data read in:
 #Libraries
 library(tidyr)
 library(dplyr)
+library(ggplot2)
 
 #Data source
 srdbData = read.csv("srdb-master/srdb-data.csv")
@@ -21,14 +22,25 @@ srdbData = read.csv("srdb-master/srdb-data.csv")
 ```{r, echo = FALSE}
 #choose relevant categories
 srdbManagable = srdbData %>% select(Latitude, Longitude, Study_midyear, Ecosystem_type, Manipulation, Rs_annual, RC_annual)
-
+ 
 #number of observations (rows) by ecosystem type
 #get rid of whitespace first
 srdbManagable$Ecosystem_type = srdbManagable$Ecosystem_type %>% trimws(c("both"))
 
-numberByEcoType = srdbManagable %>% group_by(Ecosystem_type) %>% summarize(n())
+#group by ecosystem and remove empty entries
+groupedByEcoType = srdbManagable %>%  filter(srdbManagable$Ecosystem_type != "") %>% group_by(Ecosystem_type)
 
-numberByEcoType
+ecosystemList = groupedByEcoType %>% select(Ecosystem_type)
+
+print(ecosystemList %>% summarize(n()))
+
+```
+
+** Annual RC Visualization: **
+```{r}
+#graph annual RC against lattitude with color coding by ecosystem and size by annual RS
+ggplot(groupedByEcoType, aes(RC_annual, Latitude)) + geom_point(aes(color = Ecosystem_type, size = Rs_annual)) + xlim(-.1, 1) + ylim(-50, 70) + theme_classic()
+
 ```
 
   
