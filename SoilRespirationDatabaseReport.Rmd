@@ -18,7 +18,7 @@ srdbData = read.csv("srdb-master/srdb-data.csv")
 ```
 
 
-** Number of Entries by Ecosystem Type: **
+**Number of Entries by Ecosystem Type:**
 ```{r, echo = FALSE}
 #choose relevant categories
 srdbManagable = srdbData %>% select(Latitude, Longitude, Study_midyear, Ecosystem_type, Manipulation, Rs_annual, RC_annual)
@@ -36,13 +36,23 @@ print(ecosystemList %>% summarize(n()))
 
 ```
 
-** Annual RC Visualization: **
-```{r}
+**Annual RC Visualization:**
+```{r, warning=FALSE, echo=FALSE}
 #graph annual RC against lattitude with color coding by ecosystem and size by annual RS
 ggplot(groupedByEcoType, aes(RC_annual, Latitude)) + geom_point(aes(color = Ecosystem_type, size = Rs_annual)) + xlim(-.1, 1) + ylim(-50, 70) + theme_classic()
 
 ```
 
+**Filler**
+```{r, eval=FALSE}
+library(Rcpp)
+library(sp)
+library(raster)
+
+
+precip <- getData("worldclim", var = "prec", res = 10, download = !file.exists("wc10/wc10/precip1.hdr"))
+tmean <- getData("worldclim", var = "tmean", res = 10, download = !file.exists("wc10/wc10/tmean1.hdr"))
+```
   
 **Session Information**
 ```{r, echo = FALSE}
