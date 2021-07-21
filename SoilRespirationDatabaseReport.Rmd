@@ -43,15 +43,17 @@ ggplot(groupedByEcoType, aes(RC_annual, Latitude)) + geom_point(aes(color = Ecos
 
 ```
 
-**Filler**
-```{r, eval=FALSE}
+**WorldClim Database Addition**
+```{r}
 library(Rcpp)
 library(sp)
 library(raster)
 
-
+#get and print unformatted data
 precip <- getData("worldclim", var = "prec", res = 10, download = !file.exists("wc10/wc10/precip1.hdr"))
 tmean <- getData("worldclim", var = "tmean", res = 10, download = !file.exists("wc10/wc10/tmean1.hdr"))
+print(precip)
+print(tmean)
 ```
   
 **Session Information**
