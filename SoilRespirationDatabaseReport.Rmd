@@ -44,17 +44,43 @@ ggplot(groupedByEcoType, aes(RC_annual, Latitude)) + geom_point(aes(color = Ecos
 ```
 
 **WorldClim Database Addition**
-```{r}
+```{r, echo = FALSE, message=FALSE, warning=FALSE}
 library(Rcpp)
 library(sp)
 library(raster)
 
-#get and print unformatted data
+#get data
 precip <- getData("worldclim", var = "prec", res = 10, download = !file.exists("wc10/wc10/precip1.hdr"))
 tmean <- getData("worldclim", var = "tmean", res = 10, download = !file.exists("wc10/wc10/tmean1.hdr"))
-print(precip)
-print(tmean)
-```
+
+#select coordinates from srdb
+srdbCoords = srdbData %>% dplyr::select(Latitude, Longitude)
+
+#precip mean
+precipGlobal = as.data.frame(precip, xy = TRUE) %>% drop_na() 
+mapGlobal = precipGlobal %>% dplyr::select(-x, -y) %>% apply(1, mean)
+
+#temp mean
+tmeanGlobal = as.data.frame(tmean, xy = TRUE) %>% drop_na()
+matGlobal = tmeanGlobal %>% dplyr::select(-x, -y) %>% apply(1, mean)
+
+#tibble creation with coordinates
+mat = tibble(x = tmeanGlobal$x, y = tmeanGlobal$y, mat = as.vector(matGlobal))
+map = tibble(x = precipGlobal$x, y = precipGlobal$y, map = as.vector(mapGlobal))
+
+#join precip and temp
+mapMatGlobal = left_join(map, mat, by = c("x", "y")) %>% mutate(mat = mat/10)
+#to get to degC, current format must be divided by 10
+mapMatGlobal = mapMatGlobal %>% mutate(mat = mat/10)
+#Rename column names to make joining easier
+mapMatGlobal = mapMatGlobal %>% rename("Latitude" = "x", "Longitude" = "y")
+
+#join with srdb study coordinates
+srdbMapMat = inner_join(srdbCoords, mapMatGlobal, by = c("Latitude", "Longitude"))
+
+#print coordinates w/ climate
+print(srdbMapMat)
+``` 
   
 **Session Information**
 ```{r, echo = FALSE}
