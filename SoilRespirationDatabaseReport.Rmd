@@ -72,7 +72,7 @@ map = tibble(x = precipGlobal$x, y = precipGlobal$y, map = as.vector(mapGlobal))
 mapMatGlobal = left_join(map, mat, by = c("x", "y")) %>% mutate(mat = mat/10)
 #to get to degC, current format must be divided by 10
 mapMatGlobal = mapMatGlobal %>% mutate(mat = mat/10)
-#Rename column names to make joining easier
+  #Rename column names to make joining easier
 mapMatGlobal = mapMatGlobal %>% rename("Latitude" = "x", "Longitude" = "y")
 
 #join with srdb study coordinates
