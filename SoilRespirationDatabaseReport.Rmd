@@ -12,6 +12,7 @@ library(tidyr)
 library(dplyr)
 library(ggplot2)
 
+
 #Data source
 srdbData = read.csv("srdb-master/srdb-data.csv")
 
@@ -49,8 +50,6 @@ ggplot(groupedByEcoType, aes(RC_annual, Latitude)) + geom_point(aes(color = Ecos
 library(Rcpp)
 library(sp)
 library(raster)
-
-
 
 #get data
 precip <- getData("worldclim", var = "prec", res = 10, download = !file.exists("wc10/wc10/precip1.hdr"))
@@ -97,11 +96,17 @@ print(srdbMapMat[1:20, ])
 **Visualizations of RC_annual and climate **
 ```{r,, echo = FALSE}
 
-#approximating world location (not optimal)
+#approximating world location (not optimal) and color by precip with size bytemp
+srdbMapMat %>% ggplot(aes(Longitude, Latitude, color = map)) + geom_point(size = srdbMapMat$RC_annual * 10) + scale_color_gradient(low = "skyblue", high = "blue4")  + coord_cartesian(xlim = c(-180, 180), ylim = c(-90, 90))
 
-srdbMapMat %>% ggplot() + aes(Longitude, Latitude) + geom_point(size = srdbMapMat$RC_annual * 5) + coord_cartesian(xlim = c(-180, 180), ylim = c(-90, 90))
+#RC_annual vs temperature with size by precip and color also by temp
+srdbMapMat %>% ggplot(aes(mat, RC_annual, color = mat)) + scale_color_gradient(low = "yellow1", high = "red1") + geom_point(size = srdbMapMat$map * .01)
 
+#rc annual distribution
+srdbMapMat %>% ggplot(aes(RC_annual)) + geom_histogram(bins = 50)
 
+#temp vs precip with RC_annual shown through line thickness
+srdbMapMat %>% ggplot(aes(mat, map)) + geom_line(size = srdbMapMat$RC_annual * 2)
 
 
 ```  
