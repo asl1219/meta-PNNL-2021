@@ -56,17 +56,17 @@ precip <- getData("worldclim", var = "prec", res = 10, download = !file.exists("
 tmean <- getData("worldclim", var = "tmean", res = 10, download = !file.exists("wc10/wc10/tmean1.hdr"))
 
 #select coordinates from srdb and filter by RC_annual being present
-srdbCoords = srdbData %>% dplyr::filter(RC_annual != "N/A") %>% dplyr::select(Latitude, Longitude, RC_annual)
+srdbCoords = srdbData  %>% dplyr::filter(RC_annual != "N/A") %>% dplyr::select(Latitude, Longitude, RC_annual)
 
 # Extract srdb location data from worldclim data for precip...
 raster::extract(precip, srdbCoords[1:2]) -> precip_coords
 apply(precip_coords, 1, sum) -> map_srdb
-cbind(srdbCoords, map_srdb) -> map_coords
+cbind(srdbCoords[1:2], map_srdb) -> map_coords
 
 # ...and tmean
 raster::extract(tmean,srdbCoords[1:2]) -> tmean_vals
 apply(tmean_vals, 1, mean) -> mat_srdb
-cbind(srdbCoords, mat_srdb)  %>%
+cbind(srdbCoords[1:2], mat_srdb) %>%
   # Temp data is stored in degC * 10, so we need to divide to get back to degC
   mutate(mat_srdb = mat_srdb / 10) -> mat_points
 
@@ -75,38 +75,44 @@ raster::as.data.frame(map_coords, xy = TRUE) %>%
   drop_na() -> precip_global
 
 #precip mean
-mapGlobal = precip_global %>% dplyr::select(-"Latitude", -"Longitude") %>% apply(1, mean)
-
+#is averaging again necessary?
+mapGlobal = precip_global %>% dplyr::select(-"Latitude", -"Longitude") %>% 
+apply(1, mean)
+  
 #temp mean
 tmeanGlobal = as.data.frame(mat_points, xy = TRUE) %>% drop_na()
-matGlobal = tmeanGlobal %>% dplyr::select(-"Latitude", -"Longitude") %>% apply(1, mean)
+matGlobal = tmeanGlobal %>% dplyr::select(-"Latitude", -"Longitude")
 
 #tibble creation with coordinates
-mat = tibble(Latitude = tmeanGlobal$Latitude, Longitude = tmeanGlobal$Longitude, mat = as.vector(matGlobal))
-map = tibble(Latitude = precip_global$Latitude, Longitude = precip_global$Longitude, map = as.vector(mapGlobal))
+#mat = tibble(Latitude = tmeanGlobal$Latitude, #Longitude = tmeanGlobal$Longitude, mat = as.vector(matGlobal))
+#map = tibble(Latitude = precip_global$Latitude, #Longitude = precip_global$Longitude, map = as.vector(mapGlobal))
 
 #join precip and temp
-mapMatGlobal = inner_join(map, mat, by = c("Latitude", "Longitude")) %>% mutate(mat = mat/10)
+mapMatGlobal = inner_join(x = precip_global, y = tmeanGlobal, by = c("Latitude", "Longitude")) #%>% #mutate(mat = mat/10)
 
-#join with srdb study coordinates
-srdbMapMat = inner_join(srdbCoords, mapMatGlobal, by = c("Latitude", "Longitude"))
+#join with srdb study coordinates and remove duplicates
+srdbMapMat = inner_join(srdbCoords, mapMatGlobal, by = c("Latitude", "Longitude")) %>% unique()
 #print coordinates w/ climate
 print(srdbMapMat[1:20, ])
 ``` 
 **Visualizations of RC_annual and climate **
 ```{r,, echo = FALSE}
 
+world_map <- map_data("world")
+
 #approximating world location (not optimal) and color by precip with size bytemp
-srdbMapMat %>% ggplot(aes(Longitude, Latitude, color = map)) + geom_point(size = srdbMapMat$RC_annual * 10) + scale_color_gradient(low = "skyblue", high = "blue4")  + coord_cartesian(xlim = c(-180, 180), ylim = c(-90, 90))
+srdbMapMat %>% ggplot(aes(Longitude, Latitude)) + geom_map(data = world_map, map = world_map,
+             aes(long, lat, map_id = region), color = "darkgrey", fill = "white", size = 0.4
+) + geom_point(size = srdbMapMat$RC_annual * 2, color = "blue")
 
 #RC_annual vs temperature with size by precip and color also by temp
-srdbMapMat %>% ggplot(aes(mat, RC_annual, color = mat)) + scale_color_gradient(low = "yellow1", high = "red1") + geom_point(size = srdbMapMat$map * .01)
+srdbMapMat %>% ggplot(aes(mat_srdb, RC_annual, color = mat_srdb)) + scale_color_gradient(low = "yellow1", high = "red1") + geom_point(size = srdbMapMat$map_srdb * .01)
 
 #rc annual distribution
 srdbMapMat %>% ggplot(aes(RC_annual)) + geom_histogram(bins = 50)
 
 #temp vs precip with RC_annual shown through line thickness
-srdbMapMat %>% ggplot(aes(mat, map)) + geom_line(size = srdbMapMat$RC_annual * 2)
+srdbMapMat %>% ggplot(aes(mat_srdb, map_srdb, color = RC_annual + .01)) + geom_line()
 
 
 ```  
