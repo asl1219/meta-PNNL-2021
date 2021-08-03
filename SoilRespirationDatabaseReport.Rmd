@@ -56,29 +56,33 @@ precip <- getData("worldclim", var = "prec", res = 10, download = !file.exists("
 tmean <- getData("worldclim", var = "tmean", res = 10, download = !file.exists("wc10/wc10/tmean1.hdr"))
 
 #select coordinates from srdb and filter by RC_annual being present
-srdbCoords = srdbData %>% dplyr::filter(RC_annual != "N/A") %>% dplyr::select(Latitude, Longitude, RC_annual)
+srdbCoords = srdbData %>% dplyr::filter(RC_annual != "N/A") %>% dplyr::select(Longitude, Latitude, RC_annual)
 
 # Extract srdb location data from worldclim data for precip...
 raster::extract(precip, srdbCoords[1:2]) -> precip_coords
 apply(precip_coords, 1, sum) -> map_srdb
-cbind(srdbCoords, map_srdb) -> map_coords
 
 # ...and tmean
 raster::extract(tmean,srdbCoords[1:2]) -> tmean_vals
 apply(tmean_vals, 1, mean) -> mat_srdb
 cbind(srdbCoords, mat_srdb)  %>%
   # Temp data is stored in degC * 10, so we need to divide to get back to degC
-  mutate(mat_srdb = mat_srdb / 10) -> mat_points
+  mutate(mat_srdb = mat_srdb / 10) -> mat_data
+
+#combine all climate data w/ srdb
+srdbFinal = cbind(mat_data, map_srdb)
+
+
 
 # Extract global climate space data
-raster::as.data.frame(map_coords, xy = TRUE) %>%
+raster::as.data.frame(map_data, xy = TRUE) %>%
   drop_na() -> precip_global
 
 #precip mean
 mapGlobal = precip_global %>% dplyr::select(-"Latitude", -"Longitude") %>% apply(1, mean)
 
 #temp mean
-tmeanGlobal = as.data.frame(mat_points, xy = TRUE) %>% drop_na()
+tmeanGlobal = as.data.frame(mat_data, xy = TRUE) %>% drop_na()
 matGlobal = tmeanGlobal %>% dplyr::select(-"Latitude", -"Longitude") %>% apply(1, mean)
 
 #tibble creation with coordinates
@@ -106,9 +110,14 @@ srdbMapMat %>% ggplot(aes(mat, RC_annual, color = mat)) + scale_color_gradient(l
 srdbMapMat %>% ggplot(aes(RC_annual)) + geom_histogram(bins = 50)
 
 #temp vs precip with RC_annual shown through line thickness
-srdbMapMat %>% ggplot(aes(mat, map)) + geom_line(size = srdbMapMat$RC_annual * 2)
+#srdbMapMat %>% ggplot(aes(mat, map)) + geom_line(size = srdbMapMat$RC_annual * 2)
+
+# check 
+#latitude vs mat (helpful for future presentation?)
+srdbMapMat %>% ggplot(aes(Latitude, mat)) + geom_point()
 
 
+srdbFinal %>% ggplot(aes(mat_srdb, map_srdb)) + geom_point()
 ```  
   
 **Session Information**
