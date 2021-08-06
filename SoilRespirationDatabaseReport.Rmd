@@ -22,7 +22,7 @@ srdbData = read.csv("srdb-master/srdb-data.csv")
 **Number of Entries by Ecosystem Type:**
 ```{r, echo = FALSE}
 #choose relevant categories
-srdbManagable = srdbData %>% select(Latitude, Longitude, Study_midyear, Ecosystem_type, Manipulation, Rs_annual, RC_annual)
+srdbManagable = srdbData %>% select(Longitude, Latitude, Study_midyear, Ecosystem_type, Manipulation, Rs_annual, RC_annual, Soil_drainage)
  
 #number of observations (rows) by ecosystem type
 #get rid of whitespace first
@@ -56,7 +56,7 @@ precip <- getData("worldclim", var = "prec", res = 10, download = !file.exists("
 tmean <- getData("worldclim", var = "tmean", res = 10, download = !file.exists("wc10/wc10/tmean1.hdr"))
 
 #select coordinates from srdb and filter by RC_annual being present
-srdbCoords = srdbData %>% dplyr::filter(RC_annual != "N/A") %>% dplyr::select(Longitude, Latitude, RC_annual)
+srdbCoords = srdbManagable %>% dplyr::filter(RC_annual != "N/A")
 
 # Extract srdb location data from worldclim data for precip...
 raster::extract(precip, srdbCoords[1:2]) -> precip_coords
@@ -74,47 +74,51 @@ srdbFinal = cbind(mat_data, map_srdb)
 
 
 
-# Extract global climate space data
-raster::as.data.frame(map_data, xy = TRUE) %>%
-  drop_na() -> precip_global
 
-#precip mean
-mapGlobal = precip_global %>% dplyr::select(-"Latitude", -"Longitude") %>% apply(1, mean)
-
-#temp mean
-tmeanGlobal = as.data.frame(mat_data, xy = TRUE) %>% drop_na()
-matGlobal = tmeanGlobal %>% dplyr::select(-"Latitude", -"Longitude") %>% apply(1, mean)
-
-#tibble creation with coordinates
-mat = tibble(Latitude = tmeanGlobal$Latitude, Longitude = tmeanGlobal$Longitude, mat = as.vector(matGlobal))
-map = tibble(Latitude = precip_global$Latitude, Longitude = precip_global$Longitude, map = as.vector(mapGlobal))
-
-#join precip and temp
-mapMatGlobal = inner_join(map, mat, by = c("Latitude", "Longitude")) %>% mutate(mat = mat/10)
-
-#join with srdb study coordinates
-srdbMapMat = inner_join(srdbCoords, mapMatGlobal, by = c("Latitude", "Longitude"))
-#print coordinates w/ climate
-print(srdbMapMat[1:20, ])
+# 
+# # Extract global climate space data
+# raster::as.data.frame(map_data, xy = TRUE) %>%
+#   drop_na() -> precip_global
+# 
+# #precip mean
+# mapGlobal = precip_global %>% dplyr::select(-"Latitude", -"Longitude") %>% apply(1, mean)
+# 
+# #temp mean
+# tmeanGlobal = as.data.frame(mat_data, xy = TRUE) %>% drop_na()
+# matGlobal = tmeanGlobal %>% dplyr::select(-"Latitude", -"Longitude") %>% apply(1, mean)
+# 
+# #tibble creation with coordinates
+# mat = tibble(Latitude = tmeanGlobal$Latitude, Longitude = tmeanGlobal$Longitude, mat = as.vector(matGlobal))
+# map = tibble(Latitude = precip_global$Latitude, Longitude = precip_global$Longitude, map = as.vector(mapGlobal))
+# 
+# #join precip and temp
+# mapMatGlobal = inner_join(map, mat, by = c("Latitude", "Longitude")) %>% mutate(mat = mat/10)
+# 
+# #join with srdb study coordinates
+# srdbMapMat = inner_join(srdbCoords, mapMatGlobal, by = c("Latitude", "Longitude"))
+# #print coordinates w/ climate
+# print(srdbMapMat[1:20, ])
 ``` 
 **Visualizations of RC_annual and climate **
 ```{r,, echo = FALSE}
 
 #approximating world location (not optimal) and color by precip with size bytemp
-srdbMapMat %>% ggplot(aes(Longitude, Latitude, color = map)) + geom_point(size = srdbMapMat$RC_annual * 10) + scale_color_gradient(low = "skyblue", high = "blue4")  + coord_cartesian(xlim = c(-180, 180), ylim = c(-90, 90))
+srdbFinal %>% ggplot(aes(Longitude, Latitude, color = map_srdb)) + geom_point(size = srdbFinal$RC_annual * 10) + scale_color_gradient(low = "skyblue", high = "blue4")  + coord_cartesian(xlim = c(-180, 180), ylim = c(-90, 90))
 
 #RC_annual vs temperature with size by precip and color also by temp
-srdbMapMat %>% ggplot(aes(mat, RC_annual, color = mat)) + scale_color_gradient(low = "yellow1", high = "red1") + geom_point(size = srdbMapMat$map * .01)
+srdbFinal %>% ggplot(aes(mat_srdb, RC_annual, color = mat_srdb)) + scale_color_gradient(low = "yellow1", high = "red1") + geom_point(size = srdbFinal$map_srdb * .01)
 
 #rc annual distribution
-srdbMapMat %>% ggplot(aes(RC_annual)) + geom_histogram(bins = 50)
+srdbFinal %>% ggplot(aes(RC_annual)) + geom_histogram(bins = 50)
 
 #temp vs precip with RC_annual shown through line thickness
-#srdbMapMat %>% ggplot(aes(mat, map)) + geom_line(size = srdbMapMat$RC_annual * 2)
+srdbFinal %>% 
+  ggplot(aes(mat_srdb, map_srdb)) + 
+  geom_point(aes(color = mat_srdb)) 
 
 # check 
 #latitude vs mat (helpful for future presentation?)
-srdbMapMat %>% ggplot(aes(Latitude, mat)) + geom_point()
+srdbFinal %>% ggplot(aes(Latitude, mat)) + geom_point()
 
 
 srdbFinal %>% ggplot(aes(mat_srdb, map_srdb)) + geom_point()
