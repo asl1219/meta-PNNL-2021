@@ -122,10 +122,9 @@ varImpPlot(RcRandFor)
 RcConPrediction = predict(object = RcRandFor, data = validationSet[ , -7])
 RcConfusion = table(predicted = RcConPrediction, observed = validationSet[ , 7])
 
-#ROC Curves
+#ROC Curves (not applicable? Use ecosystemtype or other qualitative instead?)
 #probability of new observations belonging to a class
-ROCcurvePredict = predict(object = RcRandFor, data = validationSet[ , -7], type = "prob")
-
+#ROCcurvePredict = predict(object = RcRandFor, data = #validationSet[ , -7], type = "prob")
 
 
 ```
