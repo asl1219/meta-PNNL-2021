@@ -119,12 +119,12 @@ RcRandFor = randomForest(formula = RC_annual ~ ., data = training, na.action = n
 varImpPlot(RcRandFor)
 
 #comparing to validation through confusion matrix
-RcConPrediction = as.data.frame(predict(object = RcRandFor, data = validationSet[ , -7]))
-RcConfusion = data.frame(predicted = RcConPrediction, observed = validationSet[ , 7])
+RcConPrediction = predict(object = RcRandFor, data = validationSet[ , -7])
+RcConfusion = table(predicted = RcConPrediction, observed = validationSet[ , 7])
 
 #ROC Curves
 #probability of new observations belonging to a class
-ROCcurvePredict = predict(object = RcRandFor, newdata = validationSet[ , -7], type = "prob")
+ROCcurvePredict = predict(object = RcRandFor, data = validationSet[ , -7], type = "prob")
 
 
 
