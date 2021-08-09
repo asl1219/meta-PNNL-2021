@@ -55,8 +55,8 @@ library(raster)
 precip <- getData("worldclim", var = "prec", res = 10, download = !file.exists("wc10/wc10/precip1.hdr"))
 tmean <- getData("worldclim", var = "tmean", res = 10, download = !file.exists("wc10/wc10/tmean1.hdr"))
 
-#select coordinates from srdb and filter by RC_annual being present
-srdbCoords = srdbManagable %>% dplyr::filter(RC_annual != "N/A")
+#select coordinates from srdb and filter by RC_annual and coords being present
+srdbCoords = srdbManagable %>% dplyr::filter(RC_annual != "N/A" & Longitude != "N/A" & Latitude != "N/A")
 
 # Extract srdb location data from worldclim data for precip...
 raster::extract(precip, srdbCoords[1:2]) -> precip_coords
@@ -90,10 +90,36 @@ srdbFinal %>% ggplot(aes(Latitude, mat_srdb)) + geom_point()
 srdbFinal %>% ggplot(aes(mat_srdb, map_srdb)) + geom_point()
 ```  
   
-**Random Forest**
+**Random Forest Addition**
 ```{r}
+#n/a's not working so remove?
+srdbFinalRF = srdbFinal
+
+#load randomforest
 library(randomForest)
 
+#random seed for reprodcution
+set.seed(37)
+
+#size of testing set
+data_set_size = floor(nrow(srdbFinalRF)/2)
+#choosing testing set
+indexes = sample(1:nrow(srdbFinalRF), size = data_set_size)
+
+#set creation
+training = srdbFinalRF[indexes, ]
+validation1 = srdbFinalRF[-indexes, ]
+
+
+#training
+RcRandFor = randomForest(formula = RC_annual ~ ., data = training, na.action = na.omit, ntree = 100, mtry = 2, importance = TRUE)
+
+#print importance plot
+varImpPlot(RcRandFor)
+
+#comparing to validation
+RcPrediction = predict(RcRandFor, newData = validation1[ , -7])
+table(observed = validation1[ , 7], predicted = RcPrediction)
 ```
 
 **Session Information**
