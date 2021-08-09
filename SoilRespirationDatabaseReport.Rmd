@@ -11,7 +11,8 @@ Libraries used and source of data read in:
 library(tidyr)
 library(dplyr)
 library(ggplot2)
-
+library(randomForest)
+library(ROCR)
 
 #Data source
 srdbData = read.csv("srdb-master/srdb-data.csv")
@@ -92,17 +93,17 @@ srdbFinal %>% ggplot(aes(mat_srdb, map_srdb)) + geom_point()
   
 **Random Forest Addition**
 ```{r}
-#n/a's not working so remove?
-srdbFinalRF = srdbFinal
-
-#load randomforest
-library(randomForest)
+#n/a's not working so remove? also fix odd split
+srdbFinalRF = srdbFinal %>% na.omit
 
 #random seed for reprodcution
 set.seed(37)
 
-#size of testing set
-data_set_size = floor(nrow(srdbFinalRF)/2)
+#size of testing set (accounts for odd splits)
+data_set_size = floor(nrow(srdbFinalRF)/4) *2 
+srdbFinalRF = srdbFinalRF[1:(data_set_size*2), ]
+
+
 #choosing testing set
 indexes = sample(1:nrow(srdbFinalRF), size = data_set_size)
 
@@ -117,12 +118,20 @@ RcRandFor = randomForest(formula = RC_annual ~ ., data = training, na.action = n
 #print importance plot
 varImpPlot(RcRandFor)
 
-#comparing to validation
-RcPrediction = predict(object = RcRandFor, newdata = validationSet[ , -7], type = "response")
-RcConfusion = data.frame(observed = validationSet[ , 7], predicted = RcPrediction)
+#comparing to validation through confusion matrix
+RcConPrediction = as.data.frame(predict(object = RcRandFor, data = validationSet[ , -7]))
+RcConfusion = data.frame(predicted = RcConPrediction, observed = validationSet[ , 7])
+
+#ROC Curves
+#probability of new observations belonging to a class
+ROCcurvePredict = predict(object = RcRandFor, newdata = validationSet[ , -7], type = "prob")
+
+
+
 ```
 
 **Session Information**
 ```{r, echo = FALSE}
 sessionInfo()
+
 ```
