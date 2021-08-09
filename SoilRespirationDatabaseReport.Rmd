@@ -108,7 +108,7 @@ indexes = sample(1:nrow(srdbFinalRF), size = data_set_size)
 
 #set creation
 training = srdbFinalRF[indexes, ]
-validation1 = srdbFinalRF[-indexes, ]
+validationSet = srdbFinalRF[-indexes, ]
 
 
 #training
@@ -118,8 +118,8 @@ RcRandFor = randomForest(formula = RC_annual ~ ., data = training, na.action = n
 varImpPlot(RcRandFor)
 
 #comparing to validation
-RcPrediction = predict(RcRandFor, newData = validation1[ , -7])
-table(observed = validation1[ , 7], predicted = RcPrediction)
+RcPrediction = predict(object = RcRandFor, newdata = validationSet[ , -7], type = "response")
+RcConfusion = data.frame(observed = validationSet[ , 7], predicted = RcPrediction)
 ```
 
 **Session Information**
