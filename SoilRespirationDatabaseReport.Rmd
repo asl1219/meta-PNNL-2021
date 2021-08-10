@@ -11,6 +11,9 @@ Libraries used and source of data read in:
 library(tidyr)
 library(dplyr)
 library(ggplot2)
+library(Rcpp)
+library(sp)
+library(raster)
 library(randomForest)
 library(ROCR)
 
@@ -48,9 +51,6 @@ ggplot(groupedByEcoType, aes(RC_annual, Latitude)) + geom_point(aes(color = Ecos
 **WorldClim Database Addition**
 (first 20 entries)
 ```{r, echo = FALSE, message=FALSE, warning=FALSE}
-library(Rcpp)
-library(sp)
-library(raster)
 
 #get data
 precip <- getData("worldclim", var = "prec", res = 10, download = !file.exists("wc10/wc10/precip1.hdr"))
