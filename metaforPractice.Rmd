@@ -1,0 +1,36 @@
+---
+title: "metaforPractice"
+author: "Adam Levin"
+date: "7/20/2021"
+output: html_document
+---
+
+
+
+```{r}
+
+#necessary libraries
+library(metafor)
+library(dplyr)
+
+#setting up data
+dat = get(data(dat.curtis1998))
+str(dat)
+
+#calculating 'standardized' effect size
+#SMD
+SMD = escalc(measure = "SMD", n1i = dat$n1i, n2i = dat$n2i, m1i = dat$m1i, m2i = dat$m2i, sd1i = dat$sd1i, sd2i = dat$sd2i)
+#lnRR
+lnRR = escalc(measure = "ROM", n1i = dat$n1i, n2i = dat$n2i, m1i = dat$m1i, m2i = dat$m2i, sd1i = dat$sd1i, sd2i = dat$sd2i)
+#add lnRR to data
+dat = bind_cols(dat, lnRR)
+print(dat)
+
+#Visualize effect size w/ 95% CIs
+forest(dat$yi, dat$vi)
+#zoom in
+forest(dat$yi[1:12], dat$vi[1:12])
+
+#source
+print("Based on http://environmentalcomputing.net/meta-analysis-1/")
+```
