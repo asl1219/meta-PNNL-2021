@@ -13,6 +13,8 @@ library(ggplot2)
 fluxes = readr::read_csv("fluxes.csv")
 collar_map = readr::read_csv("collar_map.csv")
 
+#theme for document 
+theme_set(theme_classic())
 ```
 
 # **Influence of Biotic Interactions on Resiliance to Storm Conditions**
@@ -60,27 +62,30 @@ print(infoByTreatment)
 ```
 
 
-```{r, echo = FALSE}
-#boxplot graph
-boxplotGraph = collarInfo %>% ggplot(aes(value, Treatment)) + geom_boxplot() + geom_jitter(height = 0)
-
+```{r, echo = FALSE, message=FALSE}
 #setup for means and stdev by treatment and date
-meansByBoth = collarInfo %>% group_by(date, Treatment) %>% summarize(means = mean(value))
-StDevByBoth = collarInfo %>% group_by(date, Treatment) %>% summarize(stDevds = sd(value))
+statsByBoth = collarInfo %>% group_by(date, Treatment) %>% summarize(means = mean(value), stDevds = sd(value))
 
 #setup for graphs
 boxplotGraph = collarInfo %>% ggplot(aes(value, Treatment)) + geom_boxplot() + geom_jitter(height = 0) + ggtitle("Boxplots of Flux by Treatment")
 
-lineMeanBothGraph = meansByBoth %>% ggplot(aes(date, means, group = Treatment, color = Treatment)) + geom_line() + ggtitle("Mean Flux by Date and Treatment") + xlab("Date") + ylab("Mean Flux")
+lineMeanBothGraph = statsByBoth %>% ggplot(aes(date, means, group = Treatment, color = Treatment)) + geom_line() + ggtitle("Mean Flux by Date and Treatment") + xlab("Date") + ylab("Mean Flux")
 ```
 
 ### **Relevant Graphs**
-`r boxplotGraph `
+```{r, echo = FALSE}
+boxplotGraph
 
-`r lineMeanBothGraph`
+lineMeanBothGraph
+```
 
 ### **Information on Collars not Included**
-`r collarsNotIncluded = collarInfoPreFilter %>% filter(is.na(value)) %>% select(-value)`
+```{r, echo=FALSE} 
+collarsNotIncluded = collarInfoPreFilter %>% filter(is.na(value)) %>% select(-value)
+collarsNotIncluded
+```
+
+`r c(0, 2)`
 
 ### **Ending Session Info**
 ```{r, echo = FALSE}
