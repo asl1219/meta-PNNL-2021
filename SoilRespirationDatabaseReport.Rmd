@@ -74,6 +74,7 @@ cbind(srdbCoords, mat_srdb)  %>%
 srdbFinal = cbind(mat_data, map_srdb)
 
 ``` 
+
 **Visualizations of RC_annual and climate **
 ```{r,, echo = FALSE}
 
@@ -93,24 +94,18 @@ srdbFinal %>% ggplot(aes(mat_srdb, map_srdb)) + geom_point()
   
 **Random Forest Addition**
 ```{r}
-#n/a's not working so remove? also fix odd split
-srdbFinalRF = srdbFinal %>% na.omit
-
 #random seed for reprodcution
 set.seed(37)
 
-#size of testing set (accounts for odd splits)
-data_set_size = floor(nrow(srdbFinalRF)/4) *2 
-srdbFinalRF = srdbFinalRF[1:(data_set_size*2), ]
-
+#size of testing set 
+data_set_size = floor(nrow(srdbFinal)*.8)
 
 #choosing testing set
-indexes = sample(1:nrow(srdbFinalRF), size = data_set_size)
+indexes = sample(1:nrow(srdbFinal), size = data_set_size)
 
 #set creation
-training = srdbFinalRF[indexes, ]
-validationSet = srdbFinalRF[-indexes, ]
-
+training = srdbFinal[indexes, ]
+validationSet = srdbFinal[-indexes, ]
 
 #training
 RcRandFor = randomForest(formula = RC_annual ~ ., data = training, na.action = na.omit, ntree = 100, mtry = 2, importance = TRUE)
@@ -119,13 +114,18 @@ RcRandFor = randomForest(formula = RC_annual ~ ., data = training, na.action = n
 varImpPlot(RcRandFor)
 
 #comparing to validation through confusion matrix
-RcConPrediction = predict(object = RcRandFor, data = validationSet[ , -7])
-RcConfusion = table(predicted = RcConPrediction, observed = validationSet[ , 7])
+validationSet$prediction = predict(object = RcRandFor, newdata = validationSet[ , -7])
+
+#fitting linear regression
+m_prediction = lm(prediction ~ RC_annual, data = validationSet)
+print(summary(m_prediction))
+
+#qplot of predicted vs observed of RC_annual
+qplot(RC_annual, prediction, data = validationSet) + geom_abline() + geom_smooth(method = lm)
 
 #ROC Curves (not applicable? Use ecosystemtype or other qualitative instead?)
 #probability of new observations belonging to a class
-#ROCcurvePredict = predict(object = RcRandFor, data = #validationSet[ , -7], type = "prob")
-
+#ROCcurvePredict = predict(object = RcRandFor, newdata = validationSet[ , -7], type = "prob")
 
 ```
 
