@@ -26,7 +26,7 @@ srdbData = read.csv("srdb-master/srdb-data.csv")
 **Number of Entries by Ecosystem Type:**
 ```{r, echo = FALSE}
 #choose relevant categories
-srdbManagable = srdbData %>% select(Longitude, Latitude, Study_midyear, Ecosystem_type, Manipulation, Rs_annual, RC_annual, Soil_drainage, Partition_method, Leaf_habit) %>% unique() 
+srdbManagable = srdbData %>% dplyr::select(Longitude, Latitude, Study_midyear, Ecosystem_type, Manipulation, Rs_annual, RC_annual, Soil_drainage, Partition_method, Leaf_habit) %>% unique() 
  
 #number of observations (rows) by ecosystem type
 #get rid of whitespace first
@@ -35,7 +35,7 @@ srdbManagable$Ecosystem_type = srdbManagable$Ecosystem_type %>% trimws(c("both")
 #group by ecosystem and remove empty entries
 groupedByEcoType = srdbManagable %>%  filter(srdbManagable$Ecosystem_type != "") %>% group_by(Ecosystem_type)
 
-ecosystemList = groupedByEcoType %>% select(Ecosystem_type)
+ecosystemList = groupedByEcoType %>% dplyr::select(Ecosystem_type)
 
 print(ecosystemList %>% summarize(n()))
 
