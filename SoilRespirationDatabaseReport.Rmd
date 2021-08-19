@@ -23,11 +23,14 @@ srdbData = read.csv("srdb-master/srdb-data.csv")
 ```
 
 
-**Number of Entries by Ecosystem Type:**
+**Number of Entries by Ecosystem Type and Initial Distribution:**
 ```{r, echo = FALSE}
 #choose relevant categories
 srdbManagable = srdbData %>% dplyr::select(Longitude, Latitude, Study_midyear, Ecosystem_type, Manipulation, Rs_annual, RC_annual, Soil_drainage, Partition_method, Leaf_habit) %>% unique() 
- 
+
+#rc annual distribution
+srdbManagable %>% ggplot(aes(RC_annual)) + geom_histogram(bins = 50)
+
 #number of observations (rows) by ecosystem type
 #get rid of whitespace first
 srdbManagable$Ecosystem_type = srdbManagable$Ecosystem_type %>% trimws(c("both"))
@@ -44,12 +47,10 @@ print(ecosystemList %>% summarize(n()))
 **Annual RC Visualization:**
 ```{r, warning=FALSE, echo=FALSE}
 #graph annual RC against lattitude with color coding by ecosystem and size by annual RS
-ggplot(groupedByEcoType, aes(RC_annual, Latitude)) + geom_point(aes(color = Ecosystem_type, size = Rs_annual)) + xlim(-.1, 1) + ylim(-50, 70) + theme_classic()
-
+ggplot(groupedByEcoType, aes(RC_annual, Latitude)) + geom_point(aes(color = Ecosystem_type, size = Rs_annual)) + xlim(-.1, 1) + ylim(-50, 70) + theme_classic() + labs(Title = "RC_annual by Latitude", color = "Ecosystem Type")
 ```
 
-**WorldClim Database Addition**
-(first 20 entries)
+**WorldClim Database Addition**   
 ```{r, echo = FALSE, message=FALSE, warning=FALSE}
 
 #get data
@@ -73,23 +74,23 @@ cbind(srdbCoords, mat_srdb)  %>%
 #combine all climate data w/ srdb
 srdbFinal = cbind(mat_data, map_srdb)
 
+#print first 20 rows
+srdbFinal[1:20,]
+
 ``` 
 
 **Visualizations of RC_annual and climate **
 ```{r,, echo = FALSE}
 
 world_map <- map_data("world")
-srdbFinal %>% ggplot(aes(Longitude, Latitude, color = map_srdb)) + geom_map(data = world_map, map = world_map, aes(long, lat, map_id = region), color = "darkgrey", fill = "white", size = 0.4
-) + geom_point(size = srdbFinal$RC_annual * 2) + scale_color_gradient(low = "aquamarine", high = "dodgerblue4")
+srdbFinal %>% ggplot(aes(Title = "Studies across World by Percipitation", Longitude, Latitude, color = map_srdb)) + geom_map(data = world_map, map = world_map, aes(long, lat, map_id = region), color = "darkgrey", fill = "white", size = 0.4
+) + geom_point(size = srdbFinal$RC_annual * 2) + scale_color_gradient(low = "aquamarine", high = "dodgerblue4") + labs(color = "Mean Annual Percipitation")
 
-srdbFinal %>% ggplot(aes(mat_srdb, RC_annual, color = mat_srdb)) + scale_color_gradient(low = "yellow1", high = "red1") + geom_point(size = srdbFinal$map_srdb* .001)
+srdbFinal %>% ggplot(aes(mat_srdb, RC_annual, color = mat_srdb)) + scale_color_gradient(low = "yellow1", high = "red1") + geom_point(size = srdbFinal$map_srdb* .001) + labs(x = "Mean Annual Temperature", color = "Mean Annual Temperature", size = "Mean Annual Percipitation ")
 
-#rc annual distribution
-srdbFinal %>% ggplot(aes(RC_annual)) + geom_histogram(bins = 50)
+srdbFinal %>% ggplot(aes(Latitude, mat_srdb)) + geom_point() + labs(y = "Mean Annual Temperature")
 
-srdbFinal %>% ggplot(aes(Latitude, mat_srdb)) + geom_point()
-
-srdbFinal %>% ggplot(aes(mat_srdb, map_srdb)) + geom_point()
+srdbFinal %>% ggplot(aes(mat_srdb, map_srdb)) + geom_point() + labs(x = "Mean Annual Temperature", y = "Mean Annual Percipitation")
 ```  
   
 **Random Forest Addition**
@@ -111,7 +112,7 @@ validationSet = srdbFinal[-indexes, ]
 RcRandFor = randomForest(formula = RC_annual ~ ., data = training, na.action = na.omit, ntree = 100, mtry = 2, importance = TRUE)
 
 #print importance plot
-varImpPlot(RcRandFor)
+varImpPlot(x = RcRandFor, main = "Importance Plots")
 
 #comparing to validation through confusion matrix
 validationSet$prediction = predict(object = RcRandFor, newdata = validationSet[ , -7])
@@ -121,7 +122,7 @@ m_prediction = lm(prediction ~ RC_annual, data = validationSet)
 print(summary(m_prediction))
 
 #qplot of predicted vs observed of RC_annual
-qplot(RC_annual, prediction, data = validationSet) + geom_abline() + geom_smooth(method = lm)
+qplot(RC_annual, prediction, data = validationSet, xlab = "Actual RC", ylab = "Predicted RC") + geom_abline() + geom_smooth(method = lm) 
 
 #ROC Curves (not applicable? Use ecosystemtype or other qualitative instead?)
 #probability of new observations belonging to a class
